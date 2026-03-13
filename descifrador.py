@@ -1,37 +1,31 @@
-import pandas as pd
-import multiprocessing as mp
+# descifrador.py
 
-def descifrar_cesar(texto, desplazamiento=3):
+# 1. Función para CIFRAR (al revés que descifrar)
+def cifrar_cesar(texto, desplazamiento=3):
     if not isinstance(texto, str):
         return texto
-        
     return ''.join(
-        chr(((ord(c) - 65 - desplazamiento) % 26) + 65) if c.isupper() else
-        chr(((ord(c) - 97 - desplazamiento) % 26) + 97) if c.islower() else c
+        chr(((ord(c) - 65 + desplazamiento) % 26) + 65) if c.isupper() else
+        chr(((ord(c) - 97 + desplazamiento) % 26) + 97) if c.islower() else c
         for c in texto
     )
 
-def procesar_chunk(chunk):
-    chunk['nombre'] = chunk['nombre'].apply(descifrar_cesar)
-    return chunk
+# 2. Preparamos las palabras clave cifradas UNA SOLA VEZ
+nombres_grupo = ['Fausto', 'Rafael', 'David', 'Paula', 'Lucia']
+# Las pasamos por la encriptación para buscar su versión "rara"
+nombres_cifrados = [cifrar_cesar(nombre) for nombre in nombres_grupo]
 
-def main():
-    archivo_entrada = 'datos.csv' 
-    tamano_chunk = 100000 
+# 3. La función que usará el Jefe para cada trozo
+def buscar_nombres(df):
+    # Contamos Faustos (el primer nombre de la lista)
+    fausto_cifrado = nombres_cifrados[0]
+    num_faustos = (df['nombre'] == fausto_cifrado).sum()
     
-    chunks = pd.read_csv(archivo_entrada, chunksize=tamano_chunk)
-    num_cores = mp.cpu_count()
+    # Contamos los tocayos del grupo (todos menos Fausto, asumiendo que Fausto no es del grupo)
+    tocayos_cifrados = nombres_cifrados[1:] 
+    num_tocayos = df['nombre'].isin(tocayos_cifrados).sum()
     
-    with mp.Pool(processes=num_cores) as pool:
-        resultados = pool.map(procesar_chunk, chunks)
-        
-    df_descifrado = pd.concat(resultados, ignore_index=True)
-    
-    nombres_grupo = ['Fausto', 'Rafael', 'David', 'Paula', 'Lucia', ]
-    
-    for nombre in nombres_grupo:
-        cantidad = df_descifrado['nombre'].str.contains(nombre, case=False, na=False).sum()
-        print(f"Tocayos de {nombre}: {cantidad}")
-
-if __name__ == '__main__':
-    main()
+    return {
+        "faustos": num_faustos,
+        "tocayos": num_tocayos
+    }
