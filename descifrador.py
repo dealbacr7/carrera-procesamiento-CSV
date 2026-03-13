@@ -27,9 +27,11 @@ def main():
         
     df_descifrado = pd.concat(resultados, ignore_index=True)
     
-    faustos_count = df_descifrado['nombre'].str.contains('Fausto', case=False, na=False).sum()
+    nombres_grupo = ['Fausto', 'Rafael', 'David', 'Paula', 'Lucia', ]
     
-    print(f"El número de personas que se llaman Fausto es: {faustos_count}")
+    for nombre in nombres_grupo:
+        cantidad = df_descifrado['nombre'].str.contains(nombre, case=False, na=False).sum()
+        print(f"Tocayos de {nombre}: {cantidad}")
 
 if __name__ == '__main__':
     main()
