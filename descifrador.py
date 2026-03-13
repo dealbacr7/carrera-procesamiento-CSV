@@ -1,4 +1,4 @@
-# descifrador.py
+import pandas as pd
 
 # 1. Función para CIFRAR (al revés que descifrar)
 def cifrar_cesar(texto, desplazamiento=3):
@@ -12,6 +12,7 @@ def cifrar_cesar(texto, desplazamiento=3):
 
 # 2. Preparamos las palabras clave cifradas UNA SOLA VEZ
 nombres_grupo = ['Fausto', 'Rafael', 'David', 'Paula', 'Lucia']
+
 # Las pasamos por la encriptación para buscar su versión "rara"
 nombres_cifrados = [cifrar_cesar(nombre) for nombre in nombres_grupo]
 
@@ -19,11 +20,16 @@ nombres_cifrados = [cifrar_cesar(nombre) for nombre in nombres_grupo]
 def buscar_nombres(df):
     # Contamos Faustos (el primer nombre de la lista)
     fausto_cifrado = nombres_cifrados[0]
-    num_faustos = (df['nombre'] == fausto_cifrado).sum()
     
-    # Contamos los tocayos del grupo (todos menos Fausto, asumiendo que Fausto no es del grupo)
+    # AHORA USAMOS str.contains() PARA BUSCAR DENTRO DEL NOMBRE Y APELLIDOS
+    num_faustos = df['nombre'].str.contains(fausto_cifrado, case=False, na=False).sum()
+    
+    # Contamos los tocayos del grupo
+    num_tocayos = 0
     tocayos_cifrados = nombres_cifrados[1:] 
-    num_tocayos = df['nombre'].isin(tocayos_cifrados).sum()
+    
+    for tocayo in tocayos_cifrados:
+        num_tocayos += df['nombre'].str.contains(tocayo, case=False, na=False).sum()
     
     return {
         "faustos": num_faustos,
