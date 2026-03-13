@@ -1,5 +1,5 @@
 def sacar_basicos(df):
-    # Suma los salarios
+    # El Jefe ya ha limpiado la columna 'salario' antes de pasarnos el df
     suma_salarios = df['salario'].sum()
 
     # Suma las edades
@@ -9,9 +9,10 @@ def sacar_basicos(df):
     total_gente = len(df)
 
     # Cuenta los parados (filtra los que están en estado 'parado')
+    # Nota: Aseguraos de que la columna se llama 'estado' o 'parado_sn' según vuestro CSV
     parados = (df['estado'] == 'parado').sum()
 
-    # Devuelve los datos en el formato solicitado
+    # Devuelve los datos
     return {
         "salarios": suma_salarios,
         "edades": suma_edades,
