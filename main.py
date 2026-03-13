@@ -11,16 +11,10 @@ import votos
 
 # 2. LA FUNCION QUE SE EJECUTA EN CADA TROZO (CHUNK)
 def procesar_un_trozo(chunk):
-    # 1. Contamos los parados antes de modificar la columna salario
     parados_en_este_trozo = (chunk['salario'] == 'PARADO').sum()
-    
-    # 2. Convertimos el salario a numero y quitamos los textos como "PARADO"
     chunk['salario'] = pd.to_numeric(chunk['salario'], errors='coerce').fillna(0)
     
-    # 3. Llamamos a las funciones de los companeros
     res_basicos = sacar_basicos.sacar_basicos(chunk)
-    
-    # Inyectamos el numero de parados en el diccionario de basicos
     res_basicos['parados'] = parados_en_este_trozo
     
     res_grupos = grupos.agrupar_datos(chunk)
@@ -54,6 +48,7 @@ if __name__ == '__main__':
     votos_totales = Counter()
     ciudades_totales = Counter()
     edades_totales = Counter()
+    detalle_tocayos_total = Counter() # Nuevo contador para el detalle
 
     nucleos = mp.cpu_count()
     with mp.Pool(processes=nucleos) as pool:
@@ -65,7 +60,10 @@ if __name__ == '__main__':
             total_parados += resultado_trozo['basicos']['parados']
             
             total_faustos += resultado_trozo['nombres']['faustos']
-            total_tocayos += resultado_trozo['nombres']['tocayos']
+            total_tocayos += resultado_trozo['nombres']['total_tocayos']
+            
+            # Sumamos los detalles de los tocayos de este trozo
+            detalle_tocayos_total.update(resultado_trozo['nombres']['detalle_tocayos'])
             
             votos_totales.update(resultado_trozo['votos'])
             ciudades_totales.update(resultado_trozo['grupos']['ciudades'])
@@ -82,7 +80,6 @@ if __name__ == '__main__':
     top_3_ricas = ciudades_ordenadas[:3] 
     top_3_pobres = ciudades_ordenadas[-3:] 
     
-    # Prevenir error si la lista de edades esta vacia
     rango_rico = edades_totales.most_common(1)[0] if edades_totales else ("Ninguno", 0)
     
     coalicion_ganadora = votos.calcular_ganador(dict(votos_totales))
@@ -95,11 +92,17 @@ if __name__ == '__main__':
     print(f"Tiempo total: {round(fin - inicio, 2)} segundos")
     print(f"Total personas procesadas: {total_personas}")
     print(f"Salario Medio: {round(salario_medio, 2)}")
-    print(f"Edad Media: {round(edad_media, 2)} anos")
+    print(f"Edad Media: {round(edad_media, 2)} años")
     print(f"Rango de edad con mayor salario: {rango_rico[0]} (Total: {round(rango_rico[1], 2)})")
     print(f"Combinacion ganadora de elecciones: {coalicion_ganadora}")
     print(f"Faustos encontrados: {total_faustos}")
-    print(f"Tocayos encontrados: {total_tocayos}")
+    print(f"Desglose de Tocayos encontrados:")
+    
+    # Imprimimos cada nombre individualmente
+    for nombre, cantidad in detalle_tocayos_total.items():
+        print(f"  - {nombre}: {cantidad}")
+        
+    print(f"Total de Tocayos en el grupo: {total_tocayos}")
     print(f"Top 3 Ciudades mas RICAS: {top_3_ricas}")
     print(f"Top 3 Ciudades mas POBRES: {top_3_pobres}")
     print(f"Numero de parados: {total_parados}")
